@@ -100,8 +100,7 @@ function parseProfileFile(filePath: string, name: string, options: { requireBody
   };
 }
 
-export function loadCustomSubagentProfiles(agentDir = getAgentDir()): Map<string, SubagentProfile> {
-  const dir = join(agentDir, "subagents");
+function loadSubagentProfiles(dir: string): Map<string, SubagentProfile> {
   const profiles = new Map<string, SubagentProfile>();
   if (!existsSync(dir)) {
     return profiles;
@@ -129,6 +128,14 @@ export function loadCustomSubagentProfiles(agentDir = getAgentDir()): Map<string
   }
 
   return profiles;
+}
+
+export function loadCustomSubagentProfiles(agentDir = getAgentDir()): Map<string, SubagentProfile> {
+  return loadSubagentProfiles(join(agentDir, "subagents"));
+}
+
+export function loadProjectSubagentProfiles(cwd: string): Map<string, SubagentProfile> {
+  return loadSubagentProfiles(join(cwd, ".pi", "subagents"));
 }
 
 export function loadBuiltinSubagentProfiles(dir = BUNDLED_SUBAGENTS_DIR): Map<string, SubagentProfile> {
@@ -161,6 +168,13 @@ export function loadBuiltinSubagentProfiles(dir = BUNDLED_SUBAGENTS_DIR): Map<st
   return profiles;
 }
 
-export function getSubagentProfiles(agentDir = getAgentDir()): Map<string, SubagentProfile> {
-  return new Map([...loadBuiltinSubagentProfiles(), ...loadCustomSubagentProfiles(agentDir)]);
+export function getSubagentProfiles(
+  agentDir = getAgentDir(),
+  project?: { cwd: string; trusted: boolean },
+): Map<string, SubagentProfile> {
+  return new Map([
+    ...loadBuiltinSubagentProfiles(),
+    ...loadCustomSubagentProfiles(agentDir),
+    ...(project?.trusted ? loadProjectSubagentProfiles(project.cwd) : []),
+  ]);
 }

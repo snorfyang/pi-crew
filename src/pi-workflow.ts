@@ -665,7 +665,14 @@ async function executeWorkflowCall(params: {
 
   const { script, meta } = prepared.value;
   snapshot.plannedPhases = meta.phases?.map((phase) => ({ ...phase }));
-  const profiles = filterProfilesForModelRegistry(getSubagentProfiles(getAgentDir()), ctx.modelRegistry);
+  let projectTrusted = false;
+  try {
+    projectTrusted = ctx.isProjectTrusted();
+  } catch {}
+  const profiles = filterProfilesForModelRegistry(getSubagentProfiles(getAgentDir(), {
+    cwd: ctx.cwd,
+    trusted: projectTrusted,
+  }), ctx.modelRegistry);
   const runner = createWorkflowSubagentRunner({
     profiles,
     ctx,

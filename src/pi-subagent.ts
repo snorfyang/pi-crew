@@ -111,6 +111,7 @@ interface DelegationState {
   sessionKeyLocks: SessionKeyLocks;
   activeRuns: Map<string, ActiveAgentRun>;
   flowStatus: FlowStatusState;
+  profileContext?: { cwd: string; trusted: boolean };
 }
 
 interface ActiveAgentRun {
@@ -138,6 +139,10 @@ function isProjectTrusted(ctx: ExtensionContext): boolean {
   } catch {
     return false;
   }
+}
+
+function getProfiles(ctx: ExtensionContext): Map<string, SubagentProfile> {
+  return getSubagentProfiles(getAgentDir(), { cwd: ctx.cwd, trusted: isProjectTrusted(ctx) });
 }
 
 function normalizeMaxConcurrentSubagents(value: number | string | boolean | undefined, fallback: number, label: string): number {
@@ -196,8 +201,11 @@ function formatProfileNames(profiles: Map<string, SubagentProfile>): string {
   return [...profiles.keys()].join(", ");
 }
 
-function getProfileBackend(profileName: SubagentProfileName): SubagentBackend | undefined {
-  return getSubagentProfiles(getAgentDir()).get(profileName)?.backend;
+function getProfileBackend(
+  profileName: SubagentProfileName,
+  project?: { cwd: string; trusted: boolean },
+): SubagentBackend | undefined {
+  return getSubagentProfiles(getAgentDir(), project).get(profileName)?.backend;
 }
 
 function renderAgentIdentity(display: AgentDisplayMetadata, label: string, theme: Theme): string {
@@ -287,7 +295,7 @@ async function executeAgentCall(params: {
   ctx: ExtensionContext;
 }): Promise<AgentCallOutcome> {
   const { state, options, toolCallId, label, profileName, sessionKey, signal, onUpdate, ctx } = params;
-  const profiles = filterProfilesForModelRegistry(getSubagentProfiles(getAgentDir()), ctx.modelRegistry);
+  const profiles = filterProfilesForModelRegistry(getProfiles(ctx), ctx.modelRegistry);
   const profile = profiles.get(profileName);
   if (!profile) {
     return {
@@ -539,7 +547,7 @@ function createRunAgentTool(
         return new Text("", 0, 0);
       }
       const profile = normalizeProfileName(args.profile) ?? "general-purpose";
-      const display = { backend: getProfileBackend(profile), profile };
+      const display = { backend: getProfileBackend(profile, getState().profileContext), profile };
       const label = normalizeSubagentLabel(args.label) ?? "";
       return new Text(renderAgentIdentity(display, label, theme), 0, 0);
     },
@@ -657,6 +665,7 @@ export function createSubagentExtension(options: SubagentExtensionOptions = {}):
       }
       syncLimiter();
       getState();
+      rootState.profileContext = { cwd: ctx.cwd, trusted: isProjectTrusted(ctx) };
       rootState.sessionBindings.clear();
       rootState.sessionKeyLocks = new SessionKeyLocks();
       rootState.activeRuns.clear();
@@ -708,7 +717,8 @@ export function createSubagentExtension(options: SubagentExtensionOptions = {}):
     });
 
     pi.on("before_agent_start", (event, ctx) => {
-      const profiles = filterProfilesForModelRegistry(getSubagentProfiles(getAgentDir()), ctx.modelRegistry);
+      rootState.profileContext = { cwd: ctx.cwd, trusted: isProjectTrusted(ctx) };
+      const profiles = filterProfilesForModelRegistry(getProfiles(ctx), ctx.modelRegistry);
       const savedWorkflows = listSavedWorkflows({
         agentDir: getAgentDir(),
         cwd: ctx.cwd,

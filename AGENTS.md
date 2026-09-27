@@ -38,7 +38,7 @@
 - Parallel delegation is allowed and bounded by a global `maxConcurrentSubagents` limit (default `12`), which caps how many subagents run concurrently across the whole agent run. A slot is taken on launch and released on completion/failure/abort. In v2 this same cap is shared with the `run_workflow` tool.
 - Do not put exact concurrency values in model-facing text. Runtime concurrency remains bounded and queued without exposing the operator's configured limit to the model.
 - Users can override the limit with the pi extension flag `--max-concurrent-subagents <n>`; embedded extension setups can set the default with `createFlowExtension({ maxConcurrentSubagents })` (compatibility alias: `createSubagentExtension`).
-- Custom subagent profiles are supported from `~/.pi/agent/subagents/*.md`; the only built-in is `general-purpose`. A user can define a custom profile named `explorer`, but it is not bundled.
+- Custom subagent profiles are supported from `~/.pi/agent/subagents/*.md` and trusted project `.pi/subagents/*.md`. Project profiles override global profiles of the same name; global profiles override the only built-in, `general-purpose`. A user can define a custom profile named `explorer`, but it is not bundled.
 
 ## pi-flow workflows (v2)
 
@@ -57,8 +57,8 @@
 
 ## Headless workflow execution
 
-- `@kky42/pi-flow/runtime` remains the lightweight plain-Node orchestration engine: callers provide `runSubagent`, and the export must not gain runtime dependencies on Pi peer packages.
-- `@kky42/pi-flow/headless` is the batteries-included programmatic executor for schedulers and services. It loads current profiles and reuses the same canonical profile/model/thinking/backend/tools/session-key/structured-output spawn path as the interactive `run_workflow` tool, without requiring an `ExtensionContext` or TUI.
+- `pi-crew/runtime` remains the lightweight plain-Node orchestration engine: callers provide `runSubagent`, and the export must not gain runtime dependencies on Pi peer packages.
+- `pi-crew/headless` is the batteries-included programmatic executor for schedulers and services. It loads current profiles and reuses the same canonical profile/model/thinking/backend/tools/session-key/structured-output spawn path as the interactive `run_workflow` tool, without requiring an `ExtensionContext` or TUI.
 - The shared profile-aware runner lives in `src/workflow/subagent-runner.ts`; do not reimplement that behavior in headless consumers. Headless callers may restrict allowed backends as an execution policy and receive cumulative usage callbacks.
 
 ## Saved workflows (v3)

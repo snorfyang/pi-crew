@@ -2,7 +2,7 @@
 //
 // Run via `npm run smoke:runtime` (which builds dist first). No TypeScript
 // loader is involved: this exercises exactly what an external plain-JS
-// consumer gets from `@kky42/pi-flow/runtime`, including the worker-thread
+// consumer gets from `pi-crew/runtime`, including the worker-thread
 // script host, parallel/pipeline/phase/log globals, and the shared limiter.
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
@@ -22,7 +22,7 @@ const { ConcurrencyLimiter, runWorkflow, parseWorkflowScript, isWorkflowAbortErr
 
 // The package export map must resolve the same compiled module (node package
 // self-reference exercises the "./runtime" exports entry).
-const viaExports = await import("@kky42/pi-flow/runtime");
+const viaExports = await import("pi-crew/runtime");
 assert.equal(viaExports.runWorkflow, runWorkflow, "exports map must resolve dist/runtime.js");
 
 assert.equal(typeof runWorkflow, "function");

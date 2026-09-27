@@ -1,13 +1,13 @@
 <div align="center">
 
-# pi-flow
+# pi-crew
 
 **Give Pi a team.**
 
 Orchestrate subagents and multi-step workflows across **Pi**, **Codex CLI**, and **Claude Code** without leaving your Pi session.
 
-[![CI](https://github.com/kky42/pi-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/kky42/pi-flow/actions/workflows/ci.yml)
-[![license](https://img.shields.io/npm/l/%40kky42%2Fpi-flow)](./LICENSE)
+[![CI](https://github.com/snorfyang/pi-crew/actions/workflows/ci.yml/badge.svg)](https://github.com/snorfyang/pi-crew/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 </div>
 
@@ -28,7 +28,7 @@ Define subagents for **Pi**, **Codex CLI**, and **Claude Code**, then orchestrat
 ## Try it
 
 ```bash
-pi install npm:@kky42/pi-flow
+pi install git:github.com/snorfyang/pi-crew
 ```
 
 Ask Pi naturally:
@@ -45,7 +45,7 @@ The active Tool row shows queued and running work. Pi receives the final Tool re
 
 ### Add simple subagents
 
-Profiles live at `~/.pi/agent/subagents/<name>.md`. The filename becomes the profile name. Codex and Claude profiles bypass their native permission prompts, so use them only in trusted repositories.
+Profiles live at `~/.pi/agent/subagents/<name>.md` globally or `.pi/subagents/<name>.md` in a trusted project. Project profiles take precedence when names match. The filename becomes the profile name. Codex and Claude profiles bypass their native permission prompts, so use them only in trusted repositories.
 
 **Pi explorer**
 
@@ -81,6 +81,10 @@ thinking: high
 ---
 Inspect the UI and recommend specific improvements.
 ```
+
+## Acknowledgments
+
+pi-crew is based on [kky42/pi-flow](https://github.com/kky42/pi-flow). Thanks to KKY and the pi-flow contributors for the original extension and its multi-agent workflow implementation. The original MIT license and copyright notice are preserved in [LICENSE](./LICENSE).
 
 ## License
 

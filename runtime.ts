@@ -2,7 +2,7 @@
  * Headless workflow runtime entry for plain-node (non-pi) consumers.
  *
  * `npm run build:dist` compiles this file and its transitive closure to
- * `dist/`, published as the `@kky42/pi-flow/runtime` export. The pi extension
+ * `dist/`, published as the `pi-crew/runtime` export. The pi extension
  * entry (`./index.ts`, loaded by pi's own TS loader) is unaffected.
  *
  * Everything reachable from here must stay runnable on plain node: runtime

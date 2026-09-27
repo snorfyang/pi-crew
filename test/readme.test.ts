@@ -25,7 +25,7 @@ describe("README", () => {
     expect(packageJson.files).toContain("assets");
     expect(packageJson.files).not.toContain("docs");
     expect(packageJson.pi).not.toHaveProperty("image");
-    expect(readme).toContain("pi install npm:@kky42/pi-flow");
+    expect(readme).toContain("pi install git:github.com/snorfyang/pi-crew");
     expect(readme).not.toContain("—");
 
     const localTargets = [...readme.matchAll(/\((\.\/[^)#\s]+)(?:#[^)]+)?\)/g)]

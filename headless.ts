@@ -102,7 +102,7 @@ export async function executeWorkflow<T = unknown>(options: HeadlessWorkflowOpti
   }, workflowTimeoutMs) : undefined;
   timer?.unref?.();
   const runner = createWorkflowSubagentRunner({
-    profiles: getSubagentProfiles(agentDir), ctx,
+    profiles: getSubagentProfiles(agentDir, { cwd: options.cwd, trusted: true }), ctx,
     thinkingLevel: settings.getDefaultThinkingLevel(),
     timeoutMs: subagentTimeoutMs,
     allowedBackends: options.allowedBackends,

@@ -37,6 +37,7 @@ describe("pi-subagent profiles", () => {
     stripAnsi,
     renderToText,
     makeExecutionContext,
+    executeSubagentTask,
     getToolNames,
   } = setupPiSubagentTestHarness((state) => {
     tempDir = state.tempDir;
@@ -73,6 +74,52 @@ Custom explorer role.`);
       tools: ["read", "grep", "find", "ls", "bash"],
       systemPrompt: "Custom explorer role.",
     });
+  });
+
+  it("prefers trusted project profiles and keeps them out of other projects", () => {
+    const globalDir = join(agentDir, "subagents");
+    const projectDir = join(cwd, ".pi", "subagents");
+    mkdirSync(globalDir, { recursive: true });
+    mkdirSync(projectDir, { recursive: true });
+    writeFileSync(join(globalDir, "reviewer.md"), "---\ndescription: Global reviewer.\n---\nGlobal role.");
+    writeFileSync(join(projectDir, "reviewer.md"), "---\ndescription: Project reviewer.\n---\nProject role.");
+    writeFileSync(join(projectDir, "local-only.md"), "---\ndescription: Local specialist.\n---\nLocal role.");
+
+    const trusted = getSubagentProfiles(agentDir, { cwd, trusted: true });
+    const untrusted = getSubagentProfiles(agentDir, { cwd, trusted: false });
+    const otherProject = getSubagentProfiles(agentDir, { cwd: join(tempDir, "other"), trusted: true });
+
+    expect(trusted.get("reviewer")).toMatchObject({ description: "Project reviewer.", systemPrompt: "Project role." });
+    expect(trusted.get("local-only")?.description).toBe("Local specialist.");
+    expect(untrusted.get("reviewer")?.description).toBe("Global reviewer.");
+    expect(untrusted.has("local-only")).toBe(false);
+    expect(otherProject.get("reviewer")?.description).toBe("Global reviewer.");
+    expect(otherProject.has("local-only")).toBe(false);
+  });
+
+  it("runs a direct subagent with the trusted project profile", async () => {
+    mkdirSync(join(agentDir, "subagents"), { recursive: true });
+    mkdirSync(join(cwd, ".pi", "subagents"), { recursive: true });
+    writeFileSync(join(agentDir, "subagents", "reviewer.md"), "---\ndescription: Global reviewer.\n---\nGLOBAL_ROLE_MARKER");
+    writeFileSync(join(cwd, ".pi", "subagents", "reviewer.md"), "---\ndescription: Project reviewer.\n---\nPROJECT_ROLE_MARKER");
+    const { session, registration, model, modelRegistry } = await createSession();
+    let childPrompt = "";
+
+    const { terminal } = await executeSubagentTask(
+      session,
+      registration,
+      makeExecutionContext({ hasUI: false, model, modelRegistry, projectTrusted: true }),
+      { label: "Review", prompt: "Review this project", profile: "reviewer" },
+      (context) => {
+        childPrompt = context.systemPrompt ?? "";
+        return fauxAssistantMessage("Done");
+      },
+    );
+
+    expect(terminal.status).toBe("completed");
+    expect(childPrompt).toContain("PROJECT_ROLE_MARKER");
+    expect(childPrompt).not.toContain("GLOBAL_ROLE_MARKER");
+    disposeSession(session);
   });
 
   it("loads custom subagent profiles from filename-derived names", () => {
